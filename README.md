@@ -7,7 +7,11 @@ To run this project, make sure your local dev environment is prepared according 
 
 - `nvm use` (Or ensure you are using node v20.18.1)
 - `yarn && yarn start` (or similar)
+- Press `i` (for iOS) or `a` (for Android) to install/launch Expo Go on the simulator or connected device of your choosing
 
-## Running without Expo Go
 
-To run this porject without Exo
+## Assumptions
+- Appointment status (booked vs avilable) would be committed to central backend using a RESTful API. I've used mock data to represent a simple data model and use some.
+- Appointments do not contain PII and cane be stored "in the clear". PII would need to be stored using SecureStorage 
+- English is the fallback language 
+- Screen reader only supports English

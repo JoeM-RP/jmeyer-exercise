@@ -1,17 +1,11 @@
-import { Pressable, StyleSheet } from "react-native";
+import { FlatList, Pressable, StyleSheet } from "react-native";
 
 import { Button, Text, View } from "@/components/Themed";
 import { ReactElement } from "react";
 import i18n from "@/constants/Localization";
-import { FlashList, ListRenderItemInfo } from "@shopify/flash-list";
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { LANG_PREF } from "@/constants/Storage";
-
-interface Language {
-  label: string;
-  val: string;
-}
+import { APPOINTMENTS, LANG_PREF } from "@/constants/Storage";
 
 const lang_list = [
   { label: "English (US)", val: "en" },
@@ -22,7 +16,7 @@ const lang_list = [
 export default function ModalScreen() {
   const router = useRouter();
 
-  function renderItem(i: ListRenderItemInfo<Language>): ReactElement {
+  function renderItem(i: any): ReactElement {
     const { label, val } = i.item;
     return (
       <Pressable
@@ -34,6 +28,7 @@ export default function ModalScreen() {
           i18n.changeLanguage(val);
           await AsyncStorage.setItem(LANG_PREF, val);
           router.replace("/");
+          i18n.reloadResources();
         }}
       >
         {({ pressed }) => (
@@ -47,10 +42,9 @@ export default function ModalScreen() {
 
   return (
     <View style={styles.container}>
-      <FlashList
+      <FlatList
         data={lang_list}
         renderItem={(item) => renderItem(item)}
-        estimatedItemSize={50}
         ListHeaderComponent={() => (
           <View>
             <Text style={styles.title}>{i18n.t("global.lang")}</Text>
@@ -61,8 +55,9 @@ export default function ModalScreen() {
           <Button
             accessibilityHint="Reset all local app data"
             onPress={async () => {
-              await AsyncStorage.clear();
-              router.dismiss();
+              await AsyncStorage.removeItem(LANG_PREF);
+              await AsyncStorage.removeItem(APPOINTMENTS);
+              router.replace("/");
             }}
           >
             {i18n.t("global.reset")}

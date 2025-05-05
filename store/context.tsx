@@ -2,7 +2,6 @@ import { Appointment } from "@/types";
 import {
   createContext,
   ReactNode,
-  use,
   useContext,
   useEffect,
   useState,
@@ -10,20 +9,19 @@ import {
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { APPOINTMENTS, LANG_PREF } from "@/constants/Storage";
 import logger from "@/utils/logger";
-import i18n from "@/constants/Localization";
 
 const AppContext = createContext<{
   updateAppState: () => Promise<void>;
   userLanguageOverride?: string | null;
   setUserLanguageOverride: (lang: string) => void;
   userAppointments?: Appointment[] | null;
-  setUserAppointments: (appointment: Appointment[]) => void;
+  updateUserAppointments: (appointment: Appointment[]) => void;
 }>({
   updateAppState: async () => {},
   userLanguageOverride: null,
   setUserLanguageOverride: () => {},
   userAppointments: null,
-  setUserAppointments: () => {},
+  updateUserAppointments: () => {},
 });
 
 export function useAppContext() {
@@ -51,22 +49,19 @@ export const AppContextProvider: React.FC<{ children: ReactNode }> = ({
     } catch (error) {
       const e = error as Error;
       logger.warn(`Error updating app state: ${e.message}`);
-      AsyncStorage.clear();
+      await AsyncStorage.clear();
       logger.warn("Cleared AsyncStorage");
     }
+  };
+
+  const updateUserAppointments = async (a: Appointment[]) => {
+    setUserAppointments(a);
+    await AsyncStorage.setItem(APPOINTMENTS, JSON.stringify(a));
   };
 
   useEffect(() => {
     updateAppState();
   }, []);
-
-  useEffect(() => {
-    AsyncStorage.setItem(APPOINTMENTS, JSON.stringify(userAppointments));
-  }, [userAppointments]);
-
-  useEffect(() => {
-    AsyncStorage.setItem(LANG_PREF, userLanguageOverride || "");
-  }, [userLanguageOverride]);
 
   return (
     <AppContext.Provider
@@ -75,7 +70,7 @@ export const AppContextProvider: React.FC<{ children: ReactNode }> = ({
         userLanguageOverride,
         setUserLanguageOverride,
         userAppointments,
-        setUserAppointments,
+        updateUserAppointments,
       }}
     >
       {children}

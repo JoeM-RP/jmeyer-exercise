@@ -1,12 +1,11 @@
-import { StyleSheet } from "react-native";
+import { FlatList, StyleSheet } from "react-native";
 import { getDoctorInfoAsync } from "@/services/middlewareService";
 import { Text, View } from "@/components/Themed";
-import { FlashList } from "@shopify/flash-list";
 import { useAppContext } from "@/store/context";
 import { AppointmentDetails } from "@/components/AppointmentDetails";
 import { useQuery } from "@tanstack/react-query";
 import { Doctor } from "@/types";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import i18n from "@/constants/Localization";
 
 export default function TabTwoScreen() {
@@ -29,11 +28,18 @@ export default function TabTwoScreen() {
     },
   });
 
+  useEffect(() => {
+    console.log(
+      "userAppointments",
+      userAppointments?.map((a) => a.id),
+    );
+  }, [userAppointments]);
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>{i18n.t("profile.title")}</Text>
-      <FlashList
-        data={userAppointments}
+      <FlatList
+        data={userAppointments?.sort((a, b) => a.id - b.id)}
         renderItem={(i) => {
           const { date, time, doctorId } = i.item;
 
@@ -54,7 +60,6 @@ export default function TabTwoScreen() {
         ListEmptyComponent={() => (
           <Text style={styles.text}>{i18n.t("profile.none")}</Text>
         )}
-        estimatedItemSize={100}
         refreshing={isFetching || isRefetching}
       />
     </View>

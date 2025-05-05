@@ -12,7 +12,7 @@ import { saveBookingConfirmation } from "@/services/middlewareService";
 import { useAppContext } from "@/store/context";
 
 export default function ConfirmationScreen() {
-  const { userAppointments, setUserAppointments } = useAppContext();
+  const { userAppointments, updateUserAppointments } = useAppContext();
   const { appointment, doctor } = useLocalSearchParams();
 
   const [isLoading, setIsLoading] = useState(false);
@@ -34,7 +34,7 @@ export default function ConfirmationScreen() {
 
     const aptArray = userAppointments || [];
     aptArray.push(appointmentInfo!);
-    setUserAppointments(aptArray);
+    updateUserAppointments(aptArray);
 
     setIsLoading(false);
 

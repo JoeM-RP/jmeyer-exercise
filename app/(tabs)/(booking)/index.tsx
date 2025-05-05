@@ -1,4 +1,4 @@
-import { Pressable, StyleSheet } from "react-native";
+import { FlatList, Pressable, StyleSheet } from "react-native";
 
 import { RefreshControl, Text, View } from "@/components/Themed";
 import { useQuery } from "@tanstack/react-query";
@@ -6,8 +6,7 @@ import {
   getDoctorAvailabilityAsync,
   getDoctorInfoAsync,
 } from "@/services/middlewareService";
-import { FlashList } from "@shopify/flash-list";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Appointment, Doctor } from "@/types";
 import i18n from "@/constants/Localization";
 import { router } from "expo-router";
@@ -19,6 +18,8 @@ import logger from "@/utils/logger";
 export default function TabOneScreen() {
   const insets = useSafeAreaInsets();
   const { userAppointments } = useAppContext();
+  const [localAppointments, setLocalAppointments] = useState<Appointment[]>();
+
   const [doctorInfo, setDoctorInfo] = useState<Doctor[] | undefined>(undefined);
 
   const getAppointments = async (): Promise<Appointment[]> => {
@@ -34,6 +35,22 @@ export default function TabOneScreen() {
     return response;
   };
 
+  // This is a workaround to set the booked status of the appointment when it is set
+  // locally - if there were a proper backend, this status would naturally be set there
+  const getIsBookedOverride = (id: number, isBooked: boolean) => {
+    if (isBooked) return true;
+    if (!localAppointments) return isBooked;
+
+    return localAppointments.some((apt) => id.valueOf() === apt.id.valueOf());
+  };
+
+  useEffect(() => {
+    if (userAppointments) {
+      const sortedAppointments = userAppointments.sort((a, b) => a.id - b.id);
+      setLocalAppointments(sortedAppointments);
+    }
+  }, [userAppointments]);
+
   const { isFetching, isError, data, error, refetch, isRefetching } = useQuery({
     queryKey: ["home-page"],
     queryFn: async () => {
@@ -41,15 +58,6 @@ export default function TabOneScreen() {
         getAppointments(),
         getDoctorInfo(),
       ]);
-
-      // This is a workaround to set the booked status of the appointment when it is set
-      // locally - if there were a proper backend, this status would naturally be set there
-      appointmentData.forEach((apt) => {
-        const isBooked = userAppointments?.some((userApt) => {
-          return userApt.id === apt.id;
-        });
-        apt.booked = isBooked || apt.booked;
-      });
 
       // sort by acending date and time by default
       return appointmentData.sort((a, b) => {
@@ -62,7 +70,9 @@ export default function TabOneScreen() {
   });
 
   const renderAppointments = (i: any) => {
-    const { date, time, doctorId, booked } = i.item;
+    const { id, date, time, doctorId, booked } = i.item;
+
+    const isBooked = getIsBookedOverride(id, booked) || booked;
 
     if (!doctorInfo) {
       logger.warn("Doctor info is not available");
@@ -73,14 +83,14 @@ export default function TabOneScreen() {
       <Pressable
         id={`Appointment for: ${date} ${time}`}
         accessibilityRole="button"
-        accessibilityState={{ disabled: booked }}
-        style={{ marginVertical: 5, opacity: booked ? 0.5 : 1 }}
+        accessibilityState={{ disabled: isBooked }}
+        style={{ marginVertical: 5, opacity: isBooked ? 0.5 : 1 }}
         onPress={async () => {
           router.push(
             `/confirmation?appointment=${JSON.stringify(i.item)}&doctor=${JSON.stringify(doctor)}`,
           );
         }}
-        disabled={booked}
+        disabled={isBooked}
       >
         {({ pressed }) => (
           <View
@@ -101,7 +111,7 @@ export default function TabOneScreen() {
             <Text
               accessibilityLabel={`This appointment is ${booked ? "unavailable" : "available"}`}
             >
-              {booked
+              {isBooked
                 ? i18n.t("appointment.unavailable")
                 : i18n.t("appointment.available")}
             </Text>
@@ -114,10 +124,9 @@ export default function TabOneScreen() {
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <Text style={styles.title}>{i18n.t("booking.listing")}</Text>
-      <FlashList
+      <FlatList
         data={data}
         renderItem={(i) => renderAppointments(i)}
-        estimatedItemSize={50}
         refreshing={isFetching || isRefetching}
         refreshControl={
           <RefreshControl refreshing={isFetching} onRefresh={refetch} />
