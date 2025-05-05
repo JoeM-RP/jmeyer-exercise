@@ -11,7 +11,7 @@ To run this project, make sure your local dev environment is prepared according 
 
 
 ## Assumptions
-- Appointment status (booked vs avilable) would be committed to central backend using a RESTful API. I've used mock data to represent a simple data model and use some.
+- Appointment status (booked vs avilable) would be committed to central backend using a RESTful API. I've used mock data to represent a simple data model and use some "tickery" on the front end to mimic backend behaviors.
 - Appointments do not contain PII and cane be stored "in the clear". PII would need to be stored using SecureStorage 
 - English is the fallback language 
 - Screen reader only supports English
