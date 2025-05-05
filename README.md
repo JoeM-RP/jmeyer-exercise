@@ -1,5 +1,5 @@
 # Expo Auth Sample
-A simple example of Expo Auth demonstrating refresh tokens and silent auth using Microsoft Entra
+A simple example of Expo functionality
 
 ## Getting Started
 
