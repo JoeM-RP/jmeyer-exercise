@@ -1,4 +1,4 @@
-# Expo Auth Sample
+# Expo Booking Sample
 A simple example of Expo functionality
 
 ## Getting Started
